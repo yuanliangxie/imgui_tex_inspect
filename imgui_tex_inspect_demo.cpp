@@ -399,8 +399,14 @@ void DemoInit()
     ImGuiTexInspect::CreateContext();
 
     ImGuiIO &io = ImGui::GetIO();
-    fontTexture.texture = io.Fonts->TexID;
-    fontTexture.size = ImVec2((float)io.Fonts->TexWidth, (float)io.Fonts->TexHeight);
+
+    // fontTexture.texture = io.Fonts->TexID;
+    // fontTexture.size = ImVec2((float)io.Fonts->TexWidth, (float)io.Fonts->TexHeight);
+
+    unsigned char* pixels = nullptr;
+    int texWidth, texHeight;
+    io.Fonts->GetTexDataAsRGBA32(&pixels, &texWidth, &texHeight);
+    fontTexture.size = ImVec2((float)texWidth, (float)texHeight);
 
     testTex = LoadDemoTexture();
     testInitted = true;

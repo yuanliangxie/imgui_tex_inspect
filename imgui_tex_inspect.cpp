@@ -95,7 +95,7 @@ void DestroyContext(Context *ctx)
         GContext = NULL;
     }
 
-    for (ImGuiStorage::ImGuiStoragePair &pair : ctx->Inspectors.Data)
+    for (ImGuiStoragePair &pair : ctx->Inspectors.Data)
     {
         Inspector *inspector = (Inspector *)pair.val_p;
         if (inspector)
@@ -208,7 +208,7 @@ bool BeginInspectorPanel(const char *title, ImTextureID texture, ImVec2 textureS
     ImVec2 uv0 = inspector->PanPos - viewSizeUV * 0.5;
     ImVec2 uv1 = inspector->PanPos + viewSizeUV * 0.5;
 
-    ImVec2 drawImageOffset{borderWidth, borderWidth};
+    ImVec2 drawImageOffset{static_cast<float>(borderWidth), static_cast<float>(borderWidth)};
     ImVec2 viewSize = availablePanelSize;
 
     if ((inspector->Flags & InspectorFlags_ShowWrap) == 0)

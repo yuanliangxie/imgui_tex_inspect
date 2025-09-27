@@ -8,6 +8,7 @@
 #undef IMGUI_TEX_INSPECT_FLOAT_READ_ENABLED
 #endif
 #include "imgui_tex_inspect_internal.h"
+#define IMGUI_IMPL_OPENGL_LOADER_GLAD
 
 // ==========================================================================
 // This file is largely based on:

@@ -41,6 +41,7 @@ enum InspectorFlags_
     InspectorFlags_NoAutoReadTexture    = 1 << 6,  // By default texture data is read to CPU every frame for tooltip and annotations
     InspectorFlags_FlipX                = 1 << 7,  // Horizontally flip the way the texture is displayed
     InspectorFlags_FlipY                = 1 << 8,  // Vertically flip the way the texture is displayed
+    InspectorFlags_FreeDragMode         = 1 << 9,  // Free drag in the available space
 };
 
 /* Use one of these Size structs if you want to specify an exact size for the inspector panel. 

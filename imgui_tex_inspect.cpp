@@ -211,7 +211,7 @@ bool BeginInspectorPanel(const char *title, ImTextureID texture, ImVec2 textureS
     ImVec2 drawImageOffset{static_cast<float>(borderWidth), static_cast<float>(borderWidth)};
     ImVec2 viewSize = availablePanelSize;
 
-    if ((inspector->Flags & InspectorFlags_ShowWrap) == 0)
+    if ((inspector->Flags & (InspectorFlags_ShowWrap | InspectorFlags_FreeDragMode)) == 0)
     {
         /* Don't crop the texture to UV [0,1] range.  What you see outside this 
          * range will depend on API and texture properties */
@@ -700,7 +700,13 @@ Inspector::~Inspector()
 //-------------------------------------------------------------------------
 void RoundPanPos(Inspector *inspector)
 {
-    if ((inspector->Flags & InspectorFlags_ShowWrap) > 0)
+
+    if ((inspector->Flags & InspectorFlags_FreeDragMode) > 0) {
+
+        inspector->PanPos = ImClamp(inspector->PanPos, ImVec2(0, 0), ImVec2(1, 1));
+    }
+
+    else if ((inspector->Flags & InspectorFlags_ShowWrap) > 0)
     {
         /* PanPos is the point in the center of the current view. Allow the 
          * user to pan anywhere as long as the view center is inside the 

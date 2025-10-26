@@ -208,6 +208,7 @@ void Demo_AlphaMode()
 void Demo_WrapAndFilter()
 {
     static bool showWrap = false;
+    static bool freeDrag = false;
     static bool forceNearestTexel = true;
 
     if (ImGuiTexInspect::BeginInspectorPanel("##WrapAndFilter", testTex.texture, testTex.size))
@@ -219,6 +220,9 @@ void Demo_WrapAndFilter()
         flags |= ImGuiTexInspect::InspectorFlags_ShowWrap;
     if (!forceNearestTexel)
         flags |= ImGuiTexInspect::InspectorFlags_NoForceFilterNearest;
+    if (freeDrag) {
+        flags |= ImGuiTexInspect::InspectorFlags_FreeDragMode;
+    }
 
     ImGuiTexInspect::CurrentInspector_SetFlags(flags, ~flags);
     ImGuiTexInspect::EndInspectorPanel();
@@ -228,6 +232,7 @@ void Demo_WrapAndFilter()
                        "see outside of this range will depend on the mode of the texture. For example you may see the texture repeat, or "
                        "it might be clamped to the colour of the edge pixels.\nIn this demo the texture is set to wrap.");
     ImGui::Checkbox("Show Wrapping Mode", &showWrap);
+    ImGui::Checkbox("Free Drag Mode", &freeDrag);
 
     ImGui::TextWrapped("The following option is enabled by default and forces a nearest texel filter, implemented at the shader level. "
                        "By disabling this you can the currently set mode for this texture.");

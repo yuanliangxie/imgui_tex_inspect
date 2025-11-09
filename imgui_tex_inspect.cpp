@@ -32,12 +32,14 @@ bool GetVisibleTexelRegionAndGetData(Inspector *inspector, ImVec2 &texelTL, ImVe
 struct InputMap
 {
     ImGuiMouseButton PanButton; // LMB      enables panning when held
+    ImGuiMouseButton MarkButton; // RMB      starts creating a marker rectangle
     InputMap();
 };
 
 InputMap::InputMap()
 {
     PanButton = ImGuiMouseButton_Left;
+    MarkButton = ImGuiMouseButton_Right;
 }
 
 // Settings configured via SetNextPanelOptions etc.
@@ -119,6 +121,47 @@ void SetNextPanelFlags(InspectorFlags setFlags, InspectorFlags clearFlags)
     SetFlag(GContext->NextPanelOptions.ToClear, clearFlags);
 }
 
+static ImRect MakeMarkerRect(const Inspector *inspector, ImVec2 startTexel, ImVec2 endTexel)
+{
+    ImVec2 minTexel(ImMin(startTexel.x, endTexel.x), ImMin(startTexel.y, endTexel.y));
+    ImVec2 maxTexel(ImMax(startTexel.x, endTexel.x), ImMax(startTexel.y, endTexel.y));
+
+    minTexel = ImFloor(minTexel);
+    maxTexel = ImFloor(maxTexel) + ImVec2(1.0f, 1.0f);
+
+    const ImVec2 minLimit(0.0f, 0.0f);
+    const ImVec2 maxLimit = inspector->TextureSize;
+
+    minTexel = ImClamp(minTexel, minLimit, maxLimit);
+    maxTexel = ImClamp(maxTexel, minLimit, maxLimit);
+
+    if (maxTexel.x <= minTexel.x)
+    {
+        if (maxTexel.x < maxLimit.x)
+        {
+            maxTexel.x = ImMin(minTexel.x + 1.0f, maxLimit.x);
+        }
+        else
+        {
+            minTexel.x = ImMax(maxTexel.x - 1.0f, minLimit.x);
+        }
+    }
+
+    if (maxTexel.y <= minTexel.y)
+    {
+        if (maxTexel.y < maxLimit.y)
+        {
+            maxTexel.y = ImMin(minTexel.y + 1.0f, maxLimit.y);
+        }
+        else
+        {
+            minTexel.y = ImMax(maxTexel.y - 1.0f, minLimit.y);
+        }
+    }
+
+    return ImRect(minTexel, maxTexel);
+}
+
 bool BeginInspectorPanel(const char *title, ImTextureID texture, ImVec2 textureSize, InspectorFlags flags,
                          SizeIncludingBorder sizeIncludingBorder)
 {
@@ -141,9 +184,20 @@ bool BeginInspectorPanel(const char *title, ImTextureID texture, ImVec2 textureS
 
     // Cache the basics
     inspector->ID = ID;
+    ImTextureID previousTexture = inspector->Texture;
+    ImVec2 previousTextureSize = inspector->TextureSize;
     inspector->Texture = texture;
     inspector->TextureSize = textureSize;
     inspector->Initialized = true;
+
+    if (justCreated || previousTexture != texture || previousTextureSize.x != textureSize.x ||
+        previousTextureSize.y != textureSize.y)
+    {
+        inspector->MarkerRects.clear();
+        inspector->IsMarking = false;
+        inspector->MarkStartTexel = ImVec2(0, 0);
+        inspector->MarkEndTexel = ImVec2(0, 0);
+    }
 
     // Handle incoming flags. We keep special track of the 
     // newly set flags because somethings only take effect
@@ -286,6 +340,7 @@ bool BeginInspectorPanel(const char *title, ImTextureID texture, ImVec2 textureS
         ImVec2 mouseUV = mousePosTexel / textureSize;
         mousePosTexel.x = Modulus(mousePosTexel.x, textureSize.x);
         mousePosTexel.y = Modulus(mousePosTexel.y, textureSize.y);
+        ImVec2 clampedMouseTexel = ImClamp(mousePosTexel, ImVec2(0, 0), inspector->TextureSize);
 
         if (ImGui::IsItemHovered() && (inspector->Flags & ImGuiTexInspect::InspectorFlags_NoTooltip) == 0)
         {
@@ -304,6 +359,38 @@ bool BeginInspectorPanel(const char *title, ImTextureID texture, ImVec2 textureS
         }
 
         bool hovered = ImGui::IsWindowHovered();
+
+        {
+            if (hovered && IO.MouseClicked[ctx->Input.MarkButton])
+            {
+                inspector->IsMarking = true;
+                inspector->MarkStartTexel = clampedMouseTexel;
+                inspector->MarkEndTexel = clampedMouseTexel;
+            }
+
+            if (inspector->IsMarking)
+            {
+                if (IO.MouseDown[ctx->Input.MarkButton])
+                {
+                    inspector->MarkEndTexel = clampedMouseTexel;
+                }
+                else
+                {
+                    inspector->MarkEndTexel = clampedMouseTexel;
+                    ImRect rect = MakeMarkerRect(inspector, inspector->MarkStartTexel, inspector->MarkEndTexel);
+                    if (rect.Min.x < rect.Max.x && rect.Min.y < rect.Max.y)
+                    {
+                        if (inspector->MaxAnnotatedTexels > 0 &&
+                            inspector->MarkerRects.Size >= inspector->MaxAnnotatedTexels)
+                        {
+                            inspector->MarkerRects.erase(inspector->MarkerRects.begin());
+                        }
+                        inspector->MarkerRects.push_back(rect);
+                    }
+                    inspector->IsMarking = false;
+                }
+            }
+        }
 
         {  //DRAGGING
             
@@ -363,6 +450,21 @@ bool BeginInspectorPanel(const char *title, ImTextureID texture, ImVec2 textureS
             }
             SetScale(inspector, ImVec2(inspector->PixelAspectRatio * scale, scale));
             SetPanPos(inspector, inspector->PanPos + (mouseUV - inspector->PanPos) * (1 - prevScale / scale));
+        }
+
+        const ImU32 markerColor = IM_COL32(255, 0, 0, 255);
+        const float markerThickness = 1.5f;
+        ImDrawList *drawList = ImGui::GetWindowDrawList();
+
+        for (const ImRect &rect : inspector->MarkerRects)
+        {
+            DrawAnnotationRect(drawList, rect.Min, rect.Max, inspector->TexelsToPixels, markerColor, markerThickness);
+        }
+
+        if (inspector->IsMarking)
+        {
+            ImRect previewRect = MakeMarkerRect(inspector, inspector->MarkStartTexel, inspector->MarkEndTexel);
+            DrawAnnotationRect(drawList, previewRect.Min, previewRect.Max, inspector->TexelsToPixels, markerColor, markerThickness);
         }
 
         return true;
@@ -650,6 +752,7 @@ void DrawColorChannelSelector()
                 }
             }
         }
+
     }
 
     ImGui::EndGroup();
@@ -1178,5 +1281,20 @@ void DrawAnnotationLine(ImDrawList *drawList, ImVec2 fromTexel, ImVec2 toTexel, 
     ImVec2 lineFrom = texelsToPixels * fromTexel;
     ImVec2 lineTo = texelsToPixels * toTexel;
     drawList->AddLine(lineFrom, lineTo, color, 1.0f);
+}
+
+void DrawAnnotationRect(ImDrawList *drawList, ImVec2 fromTexel, ImVec2 toTexel, Transform2D texelsToPixels, ImU32 color,
+                        float thickness)
+{
+    ImVec2 minTexel(ImMin(fromTexel.x, toTexel.x), ImMin(fromTexel.y, toTexel.y));
+    ImVec2 maxTexel(ImMax(fromTexel.x, toTexel.x), ImMax(fromTexel.y, toTexel.y));
+
+    ImVec2 cornerA = texelsToPixels * minTexel;
+    ImVec2 cornerB = texelsToPixels * maxTexel;
+
+    ImVec2 rectMin(ImMin(cornerA.x, cornerB.x), ImMin(cornerA.y, cornerB.y));
+    ImVec2 rectMax(ImMax(cornerA.x, cornerB.x), ImMax(cornerA.y, cornerB.y));
+
+    drawList->AddRect(rectMin, rectMax, color, 0.0f, 0, thickness);
 }
 } // namespace ImGuiTexInspect

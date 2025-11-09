@@ -88,6 +88,7 @@ struct Inspector
 
     // View State
     bool IsDragging = false;            // Is user currently dragging to pan view
+    bool IsMarking = false;             // Is user currently creating a marker rectangle
     ImVec2 PanPos = {0.5f, 0.5f};       // The UV value at the center of the current view
     ImVec2 Scale = {1, 1};              // 1 pixel is 1 texel
 
@@ -135,6 +136,11 @@ struct Inspector
     // Color transformation
     ShaderOptions ActiveShaderOptions;
     ShaderOptions CachedShaderOptions;
+
+    // Marker rectangles
+    ImVec2 MarkStartTexel = {0, 0};
+    ImVec2 MarkEndTexel = {0, 0};
+    ImVector<ImRect> MarkerRects;
 
     ~Inspector();
 };

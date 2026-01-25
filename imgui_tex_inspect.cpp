@@ -1079,7 +1079,7 @@ namespace ImGuiTexInspect {
             case Preset::NormalMap:
                 VectorIndex_x = 0;
                 VectorIndex_y = 1;
-                LineScale = ImVec2(1, -1);
+                LineScale = ImVec2(1, -1); //这里y轴为-1，是为了匹配常用的以上为递增方向的y坐标系
                 ZeroPoint = ImVec2(128.0f / 255, 128.0f / 255);
                 break;
             case Preset::NormalizedFloat:
@@ -1102,6 +1102,7 @@ namespace ImGuiTexInspect {
         ImVec2 lineStart = texel;
         ImVec2 lineEnd = lineStart + lineDir;
 
+        //旋转45度
         ImVec2 arrowHead1 = ImVec2(lineDir.x - lineDir.y, lineDir.x + lineDir.y) * -arrowHeadScale;
         ImVec2 arrowHead2 = ImVec2(lineDir.x + lineDir.y, -lineDir.x + lineDir.y) * -arrowHeadScale;
 

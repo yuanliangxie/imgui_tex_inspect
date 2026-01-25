@@ -670,7 +670,7 @@ namespace ImGuiTexInspect {
         // （1-K）-(panpos - viewsizeuv/2) > 0
         //  (panpos - viewsizeuv/2) - k > 0
         if ((inspector->Flags & InspectorFlags_FreeDragMode) > 0) {
-            ImVec2 k ={0.2f, 0.2f};
+            ImVec2 k ={0.01f, 0.01f};
             inspector->PanPos = ImClamp(inspector->PanPos, k-(inspector->ViewSizeUV/2), (ImVec2{1.0f, 1.0f}- k) + (inspector->ViewSizeUV/2));
             // inspector->PanPos = ImClamp(inspector->PanPos, ImVec2(-109.5, -109.5), ImVec2(109.5, 109.5));
         } else if ((inspector->Flags & InspectorFlags_ShowWrap) > 0) {

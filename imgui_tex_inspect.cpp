@@ -31,11 +31,15 @@ namespace ImGuiTexInspect {
     // Input mapping structure, default values listed in the comments.
     struct InputMap {
         ImGuiMouseButton PanButton; // LMB      enables panning when held
+        ImGuiMouseButton MarkButton;// RMB      starts creating a marker rectangle
+        ImGuiMouseButton ClearMarkButton;//MMB  Clear All RectMark
         InputMap();
     };
 
     InputMap::InputMap() {
         PanButton = ImGuiMouseButton_Left;
+        MarkButton = ImGuiMouseButton_Right;
+        ClearMarkButton = ImGuiMouseButton_Middle;
     }
 
     // Settings configured via SetNextPanelOptions etc.
@@ -105,6 +109,24 @@ namespace ImGuiTexInspect {
         SetFlag(GContext->NextPanelOptions.ToClear, clearFlags);
     }
 
+    static ImRect MakeMarkerRect(const Inspector *inspector, ImVec2 startTexel, ImVec2 endTexel)
+    {
+        ImVec2 minTexel(ImMin(startTexel.x, endTexel.x), ImMin(startTexel.y, endTexel.y));
+        ImVec2 maxTexel(ImMax(startTexel.x, endTexel.x), ImMax(startTexel.y, endTexel.y));
+
+        minTexel = ImFloor(minTexel);
+        maxTexel = ImFloor(maxTexel) + ImVec2(1.0f, 1.0f);
+
+        const ImVec2 minLimit(0.0f, 0.0f);
+        const ImVec2 maxLimit = inspector->TextureSize;
+
+        minTexel = ImClamp(minTexel, minLimit, maxLimit);
+        maxTexel = ImClamp(maxTexel, minLimit, maxLimit);
+
+        return ImRect(minTexel, maxTexel);
+    }
+
+
 
     //判断当前鼠标的坐标落在纹理上
     bool IsMouseHoverInTexture(ImVec2 mous_uv) {
@@ -137,9 +159,20 @@ namespace ImGuiTexInspect {
 
         // Cache the basics
         inspector->ID = ID;
+        ImTextureID previousTexture = inspector->Texture;
+        ImVec2 previousTextureSize = inspector->TextureSize;
         inspector->Texture = texture;
         inspector->TextureSize = textureSize;
         inspector->Initialized = true;
+
+        if (justCreated || previousTexture != texture || previousTextureSize.x != textureSize.x ||
+        previousTextureSize.y != textureSize.y)
+        {
+            inspector->MarkerRects.clear();
+            inspector->IsMarking = false;
+            inspector->MarkStartTexel = ImVec2(0, 0);
+            inspector->MarkEndTexel = ImVec2(0, 0);
+        }
 
         // Handle incoming flags. We keep special track of the
         // newly set flags because somethings only take effect
@@ -281,6 +314,9 @@ namespace ImGuiTexInspect {
             ImVec2 mousePos = ImGui::GetMousePos();
             ImVec2 mousePosTexel = inspector->PixelsToTexels * mousePos;
             ImVec2 mouseUV = mousePosTexel / textureSize;
+
+            ImVec2 clampedMousePosTexel = ImClamp(mousePosTexel, ImVec2{0,0}, inspector->TextureSize);
+
             mousePosTexel.x = Modulus(mousePosTexel.x, textureSize.x);
             mousePosTexel.y = Modulus(mousePosTexel.y, textureSize.y);
 
@@ -302,6 +338,42 @@ namespace ImGuiTexInspect {
             }
 
             bool hovered = ImGui::IsWindowHovered();
+
+            //如果按鼠标中键，则取消所有标记框的绘制。
+            {
+                if (hovered && IO.MouseClicked[ctx->Input.ClearMarkButton]) {
+                    inspector->IsMarking = false;
+                    inspector->MarkStartTexel = {0,0};
+                    inspector->MarkEndTexel = {0,0};
+                    inspector->MarkerRects.clear();
+                }
+            }
+
+
+            {
+                if (hovered && IO.MouseClicked[ctx->Input.MarkButton])
+                {
+                    inspector->IsMarking = true;
+                    inspector->MarkStartTexel = clampedMousePosTexel;
+                    inspector->MarkEndTexel = clampedMousePosTexel;
+                }
+
+                if (inspector->IsMarking)
+                {
+                    if (IO.MouseDown[ctx->Input.MarkButton])
+                    {
+                        inspector->MarkEndTexel = clampedMousePosTexel;
+                    }
+                    else
+                    {
+                        inspector->MarkEndTexel = clampedMousePosTexel;
+                        ImRect rect = MakeMarkerRect(inspector, inspector->MarkStartTexel, inspector->MarkEndTexel);
+                        inspector->MarkerRects.push_back(MarkRect{rect, IM_COL32(255, 165, 0, 255), 1.5f, MarkRect::Manual_Mark});
+                        inspector->IsMarking = false;
+                    }
+                }
+            }
+
             {
                 //DRAGGING
 
@@ -362,6 +434,20 @@ namespace ImGuiTexInspect {
                     SetPanPos(inspector, inspector->PanPos + (mouseUV - inspector->PanPos) * (1 - prevScale / inspector->Scale.y));
                 }
             }
+
+            ImDrawList *drawList = ImGui::GetWindowDrawList();
+
+            for (const MarkRect &mRect : inspector->MarkerRects)
+            {
+                DrawAnnotationRect(drawList, mRect.rect_.Min, mRect.rect_.Max, inspector->TexelsToPixels, mRect.color_, mRect.thickness_);
+            }
+
+            if (inspector->IsMarking)
+            {
+                ImRect previewRect = MakeMarkerRect(inspector, inspector->MarkStartTexel, inspector->MarkEndTexel);
+                DrawAnnotationRect(drawList, previewRect.Min, previewRect.Max, inspector->TexelsToPixels, IM_COL32(255, 215, 0, 255), 1.5f);
+            }
+
             return true;
         } else {
             return false;
@@ -1116,5 +1202,15 @@ namespace ImGuiTexInspect {
         ImVec2 lineFrom = texelsToPixels * fromTexel;
         ImVec2 lineTo = texelsToPixels * toTexel;
         drawList->AddLine(lineFrom, lineTo, color, 1.0f);
+    }
+
+    void DrawAnnotationRect(ImDrawList *drawList, ImVec2 fromTexel, ImVec2 toTexel, Transform2D texelsToPixels, ImU32 color,
+                            float thickness)
+    {
+        ImVec2 rectMin = texelsToPixels * fromTexel;
+        ImVec2 rectMax = texelsToPixels * toTexel;
+
+        drawList->AddRectFilled(rectMin, rectMax, IM_COL32(255, 215, 0, 80));
+        drawList->AddRect(rectMin, rectMax, color, 0.0f, 0, thickness);
     }
 } // namespace ImGuiTexInspect

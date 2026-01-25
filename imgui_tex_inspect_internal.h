@@ -76,6 +76,22 @@ struct ShaderOptions
     ShaderOptions();
 };
 
+
+struct MarkRect {
+
+    enum MarkType {
+        Manual_Mark=0
+    };
+
+    MarkRect(ImRect rect, ImU32 color, float thickness, MarkType mark_type)
+        :rect_(rect),color_(color),thickness_(thickness), mark_type_(mark_type_)
+    {}
+    MarkType mark_type_;
+    ImRect rect_;
+    ImU32 color_;
+    float thickness_;
+};
+
 struct Inspector
 {
     ImGuiID ID;
@@ -88,6 +104,7 @@ struct Inspector
 
     // View State
     bool IsDragging = false;            // Is user currently dragging to pan view
+    bool IsMarking = false;             // Is user currently creating a marker rectangle
     ImVec2 PanPos = {0.5f, 0.5f};       // The UV value at the center of the current view
     ImVec2 Scale = {1, 1};              // 1 pixel is 1 texel
 
@@ -135,6 +152,11 @@ struct Inspector
     // Color transformation
     ShaderOptions ActiveShaderOptions;
     ShaderOptions CachedShaderOptions;
+
+    //Marker rectangles
+    ImVec2 MarkStartTexel = {0, 0};
+    ImVec2 MarkEndTexel = {0, 0};
+    ImVector<MarkRect> MarkerRects;
 
     ~Inspector();
 };

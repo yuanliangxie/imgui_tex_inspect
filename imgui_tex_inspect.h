@@ -143,6 +143,14 @@ void SetZoomRate(float factor);
  */
 void DrawAnnotationLine(ImDrawList *drawList, ImVec2 fromTexel, ImVec2 toTexel, Transform2D texelsToPixels, ImU32 color);
 
+/* DrawAnnotationRect
+* Convenience function to add an axis-aligned rectangle using texel coordinates.
+* Uses the ImGui draw list so no custom shader work is required to display a marker box.
+*/
+void DrawAnnotationRect(ImDrawList *drawList, ImVec2 fromTexel, ImVec2 toTexel, Transform2D texelsToPixels, ImU32 color,
+                        float thickness = 1.0f);
+
+
 //-------------------------------------------------------------------------
 // [SECTION] Annotation Classes
 //-------------------------------------------------------------------------

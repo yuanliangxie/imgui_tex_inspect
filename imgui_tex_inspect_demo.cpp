@@ -34,30 +34,30 @@ void DemoInit();
 // [SECTION] EXAMPLE USAGES
 //-------------------------------------------------------------------------
 
-/* Each of the following Demo_* functions is a standalone demo showing an example 
- * usage of ImGuiTexInspect.  You'll notice the structure is essentially the same in 
- * all the examples, i.e. a call to BeginInspectorPanel & a call to 
- * EndInspectorPanel, possibly with some annotation functions in between, 
+/* Each of the following Demo_* functions is a standalone demo showing an example
+ * usage of ImGuiTexInspect.  You'll notice the structure is essentially the same in
+ * all the examples, i.e. a call to BeginInspectorPanel & a call to
+ * EndInspectorPanel, possibly with some annotation functions in between,
  * followed by some controls to manipulate the inspector.
  *
- * Each Demo_* function corresponds to one of the large buttons at the top of 
+ * Each Demo_* function corresponds to one of the large buttons at the top of
  * the demo window.
  */
 
 /* Demo_ColorFilters
- * An example showing controls to filter red, green and blue channels 
- * independently. These controls are provided by the DrawColorChannelSelector 
- * funtions.  The example also uses the DrawGridEditor function to allow the 
- * user to control grid appearance. 
+ * An example showing controls to filter red, green and blue channels
+ * independently. These controls are provided by the DrawColorChannelSelector
+ * funtions.  The example also uses the DrawGridEditor function to allow the
+ * user to control grid appearance.
  *
- * The Draw_* functions are provided for convenience, it is of course possible 
+ * The Draw_* functions are provided for convenience, it is of course possible
  * to control these aspects programmatically.
  */
 void Demo_ColorFilters()
 {
     /* BeginInspectorPanel & EndInspectorPanel is all you need to draw an
-     * inspector (assuming you are already in between an ImGui::Begin and 
-     * ImGui::End pair) 
+     * inspector (assuming you are already in between an ImGui::Begin and
+     * ImGui::End pair)
      * */
     static bool flipX = false;
     static bool flipY = false;
@@ -82,8 +82,8 @@ void Demo_ColorFilters()
     ImGui::EndChild();
 
 
-    /* DrawColorChannelSelector & DrawGridEditor are convenience functions that 
-     * draw ImGui controls to manipulate config of the most recently drawn 
+    /* DrawColorChannelSelector & DrawGridEditor are convenience functions that
+     * draw ImGui controls to manipulate config of the most recently drawn
      * texture inspector
      **/
     ImGuiTexInspect::DrawColorChannelSelector();
@@ -98,11 +98,11 @@ void Demo_ColorFilters()
 
 //-------------------------------------------------------------------------
 
-/* Demo_ColorMatrix 
- * An example showing usage of the ColorMatrix.  See comments at the 
- * declaration of CurrentInspector_SetColorMatrix for details.  This example 
- * shows how to set the matrix directly, as well as how to use the 
- * DrawColorMatrixEditor convenience function to draw ImGui controls to 
+/* Demo_ColorMatrix
+ * An example showing usage of the ColorMatrix.  See comments at the
+ * declaration of CurrentInspector_SetColorMatrix for details.  This example
+ * shows how to set the matrix directly, as well as how to use the
+ * DrawColorMatrixEditor convenience function to draw ImGui controls to
  * manipulate it.
  */
 void Demo_ColorMatrix()
@@ -132,9 +132,9 @@ void Demo_ColorMatrix()
     if (ImGui::Button("Negative", buttonSize))
     {
         // Matrix which inverts each of the red, green, blue channels and leaves Alpha untouched
-        float matrix[] = {-1.000f,  0.000f,  0.000f,  0.000f, 
+        float matrix[] = {-1.000f,  0.000f,  0.000f,  0.000f,
                            0.000f, -1.000f,  0.000f,  0.000f,
-                           0.000f,  0.000f, -1.000f,  0.000f, 
+                           0.000f,  0.000f, -1.000f,  0.000f,
                            0.000f,  0.000f,  0.000f,  1.000f};
 
         float colorOffset[] = {1, 1, 1, 0};
@@ -143,20 +143,20 @@ void Demo_ColorMatrix()
     if (ImGui::Button("Swap Red & Blue", buttonSize))
     {
         // Matrix which swaps red and blue channels but leaves green and alpha untouched
-        float matrix[] = { 0.000f,  0.000f,  1.000f,  0.000f, 
+        float matrix[] = { 0.000f,  0.000f,  1.000f,  0.000f,
                            0.000f,  1.000f,  0.000f,  0.000f,
-                           1.000f,  0.000f,  0.000f,  0.000f, 
+                           1.000f,  0.000f,  0.000f,  0.000f,
                            0.000f,  0.000f,  0.000f,  1.000f};
         float colorOffset[] = {0, 0, 0, 0};
         ImGuiTexInspect::CurrentInspector_SetColorMatrix(matrix, colorOffset);
     }
     if (ImGui::Button("Alpha", buttonSize))
     {
-        // Red, green and blue channels are set based on alpha value so that alpha = 1 shows as white. 
+        // Red, green and blue channels are set based on alpha value so that alpha = 1 shows as white.
         // output alpha is set to 1
         float highlightTransparencyMatrix[] = {0.000f, 0.000f, 0.000f, 0.000f,
                                                0.000f, 0.000f, 0.000f, 0.000f,
-                                               0.000f, 0.000f, 0.000f, 0.000f, 
+                                               0.000f, 0.000f, 0.000f, 0.000f,
                                                1.000,  1.000,  1.000,  1.000f};
         float highlightTransparencyOffset[] = {0, 0, 0, 1};
         ImGuiTexInspect::CurrentInspector_SetColorMatrix(highlightTransparencyMatrix, highlightTransparencyOffset);
@@ -164,9 +164,9 @@ void Demo_ColorMatrix()
     if (ImGui::Button("Transparency", buttonSize))
     {
         // Red, green and blue channels are scaled by 0.1f. Low alpha values are shown as magenta
-        float highlightTransparencyMatrix[] = {0.100f,  0.100f,  0.100f,  0.000f, 
+        float highlightTransparencyMatrix[] = {0.100f,  0.100f,  0.100f,  0.000f,
                                                0.100f,  0.100f,  0.100f,  0.000f,
-                                               0.100f,  0.100f,  0.100f,  0.000f, 
+                                               0.100f,  0.100f,  0.100f,  0.000f,
                                               -1.000f,  0.000f, -1.000f,  0.000f};
         float highlightTransparencyOffset[] = {1, 0, 1, 1};
         ImGuiTexInspect::CurrentInspector_SetColorMatrix(highlightTransparencyMatrix, highlightTransparencyOffset);
@@ -174,9 +174,9 @@ void Demo_ColorMatrix()
     if (ImGui::Button("Default", buttonSize))
     {
         // Default "identity" matrix that doesn't modify colors at all
-        float matrix[] = {1.000f, 0.000f, 0.000f, 0.000f, 
+        float matrix[] = {1.000f, 0.000f, 0.000f, 0.000f,
                           0.000f, 1.000f, 0.000f, 0.000f,
-                          0.000f, 0.000f, 1.000f, 0.000f, 
+                          0.000f, 0.000f, 1.000f, 0.000f,
                           0.000f, 0.000f, 0.000f, 1.000f};
 
         float colorOffset[] = {0, 0, 0, 0};
@@ -188,8 +188,8 @@ void Demo_ColorMatrix()
 }
 
 /* Demo_AlphaMode
- * Very simple example that calls DrawAlphaModeSelector to draw controls to 
- * allow user to select alpha mode for the inpsector. See InspectorAlphaMode 
+ * Very simple example that calls DrawAlphaModeSelector to draw controls to
+ * allow user to select alpha mode for the inpsector. See InspectorAlphaMode
  * enum for details on what the different modes are. */
 void Demo_AlphaMode()
 {
@@ -202,19 +202,22 @@ void Demo_AlphaMode()
 }
 
 /* Demo_WrapAndFilter
- * Demo showing the effect of the InspectorFlags_ShowWrap & InspectorFlags_NoForceFilterNearest flags. 
+ * Demo showing the effect of the InspectorFlags_ShowWrap & InspectorFlags_NoForceFilterNearest flags.
  * See InspectorFlags_ enum for details on these flags.
  */
 void Demo_WrapAndFilter()
 {
     static bool showWrap = false;
-    static bool freeDrag = false;
+    static bool freeDrag = true;
+    static bool fillVertical = true;
+    static bool fillHorizontal = false;
     static bool forceNearestTexel = true;
 
-    if (ImGuiTexInspect::BeginInspectorPanel("##WrapAndFilter", testTex.texture, testTex.size))
+    ImGuiTexInspect::InspectorFlags flags = 0;
+
+    if (ImGuiTexInspect::BeginInspectorPanel("WrapAndFilter", testTex.texture, testTex.size))
     {
     }
-    ImGuiTexInspect::InspectorFlags flags = 0;
 
     if (showWrap)
         flags |= ImGuiTexInspect::InspectorFlags_ShowWrap;
@@ -223,8 +226,20 @@ void Demo_WrapAndFilter()
     if (freeDrag) {
         flags |= ImGuiTexInspect::InspectorFlags_FreeDragMode;
     }
+    if (fillVertical) {
+        flags |= ImGuiTexInspect::InspectorFlags_FillVertical;
+        ImGuiTexInspect::ClearFlag(flags, ImGuiTexInspect::InspectorFlags_FillHorizontal);
+        fillHorizontal = false;
+    }
+    if (fillHorizontal) {
+        flags |= ImGuiTexInspect::InspectorFlags_FillHorizontal;
+        ImGuiTexInspect::ClearFlag(flags, InspectorFlags_FillVertical);
+        fillVertical = false;
+    }
 
     ImGuiTexInspect::CurrentInspector_SetFlags(flags, ~flags);
+
+
     ImGuiTexInspect::EndInspectorPanel();
 
     ImGui::BeginChild("Controls", ImVec2(600, 0));
@@ -237,6 +252,25 @@ void Demo_WrapAndFilter()
     ImGui::TextWrapped("The following option is enabled by default and forces a nearest texel filter, implemented at the shader level. "
                        "By disabling this you can the currently set mode for this texture.");
     ImGui::Checkbox("Force Nearest Texel", &forceNearestTexel);
+    ImGui::Checkbox("Fill Vertical", &fillVertical);
+    ImGui::Checkbox("Fill Horizontal", &fillHorizontal);
+
+    ImGui::EndChild();
+
+    ImGui::SameLine();
+
+    ImGui::BeginChild("run param show", ImVec2(600, 0));
+    static ImGuiID cur_inspector_id;
+    Inspector * inspector = ImGuiTexInspect::GetCurInspector();
+    cur_inspector_id = inspector->ID;
+    ImGui::Text("Inspect ID:%08X", cur_inspector_id);
+    ImGui::Text("PannelSize x:%.2f, y:%.2f", inspector->PanelSize.x, inspector->PanelSize.y);
+    ImGui::Text("PanPos x:%.2f, y:%.2f", inspector->PanPos.x, inspector->PanPos.y);
+    ImGui::Text("ViewSize x:%.2f, y:%.2f", inspector->ViewSize.x, inspector->ViewSize.y);
+    ImGui::Text("ViewSizeUV x:%.2f, y:%.2f", inspector->ViewSizeUV.x, inspector->ViewSizeUV.y);
+    ImGui::Text("Cur texture scale x:%.2f, y:%.2f", inspector->Scale.x, inspector->Scale.y);
+    ImGui::Text("ViewTopLeftPixel x:%.2f, y:%.2f", inspector->ViewTopLeftPixel.x, inspector->ViewTopLeftPixel.y);
+    ImGui::Text("TextureSize x:%.2f, y:%.2f", inspector->TextureSize.x, inspector->TextureSize.y);
     ImGui::EndChild();
 }
 
@@ -246,10 +280,10 @@ class CustomAnnotationExample
     public:
         void DrawAnnotation(ImDrawList *drawList, ImVec2 texel, ImGuiTexInspect::Transform2D texelsToPixels, ImVec4 value)
         {
-            /* A silly example to show the process of creating a new annotation 
-             * We'll see which primary colour is the dominant colour in the texel 
-             * then draw a different shape for each primary colour.  The radius 
-             * will be based on the overall brightness. 
+            /* A silly example to show the process of creating a new annotation
+             * We'll see which primary colour is the dominant colour in the texel
+             * then draw a different shape for each primary colour.  The radius
+             * will be based on the overall brightness.
              */
             int numSegments;
 
@@ -365,7 +399,7 @@ void ShowDemoWindow()
         ImGui::Spacing();
 
         //Custom color values to example-select buttons to make them stand out
-        ImGui::PushStyleColor(ImGuiCol_Button,        (ImVec4)ImColor::HSV(0.59f, 0.7f, 0.8f)); 
+        ImGui::PushStyleColor(ImGuiCol_Button,        (ImVec4)ImColor::HSV(0.59f, 0.7f, 0.8f));
         ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (ImVec4)ImColor::HSV(0.59f, 0.8f, 0.8f));
         ImGui::PushStyleColor(ImGuiCol_ButtonActive,  (ImVec4)ImColor::HSV(0.59f, 0.9f, 1.0f));
 
@@ -387,7 +421,7 @@ void ShowDemoWindow()
         ImGui::PopStyleColor();
 
         ImGui::Spacing();
-        
+
         // Call function to render currently example scene
         demos[selectedDemo].DrawDemoFn();
     }
@@ -433,7 +467,7 @@ bool CanAccessFile(const char *path)
 
 Texture LoadDemoTexture()
 {
-    /* To be a bit forgiving to build different build & test processes we check 
+    /* To be a bit forgiving to build different build & test processes we check
      * a few different paths to find the demo texture.
      */
     const char *pathsToTry[] = {"demo_1.png", "../demo_1.png", "examples/demo_1.png"};
@@ -448,4 +482,4 @@ Texture LoadDemoTexture()
     fprintf(stderr, "Unable to find demo_1.png\n");
     exit(-1);
 }
-} //namespace 
+} //namespace

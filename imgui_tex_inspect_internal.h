@@ -64,7 +64,7 @@ struct ShaderOptions
     float  ColorOffset[4] = {};
 
     ImVec4 BackgroundColor                = {0,0,0,0}; // Color used for alpha blending
-    float  PremultiplyAlpha               = 0;         // If 1 then color will be multiplied by alpha in shader, before blend stage 
+    float  PremultiplyAlpha               = 0;         // If 1 then color will be multiplied by alpha in shader, before blend stage
     float  DisableFinalAlpha              = 0;         // If 1 then fragment shader will always output alpha = 1
 
     bool   ForceNearestSampling           = false;     // If true fragment shader will always sample from texel centers
@@ -106,13 +106,13 @@ struct Inspector
     bool HaveCurrentTexelData = false;
     BufferDesc Buffer;
 
-    /* We don't actually access texel data through this pointer.  We just 
-     * manage its lifetime. The backend might have asked us to allocated a 
-     * buffer, or it might not.  The pointer we actually use to access texel 
-     * data is in the Buffer object above (which depending on what the backend 
+    /* We don't actually access texel data through this pointer.  We just
+     * manage its lifetime. The backend might have asked us to allocated a
+     * buffer, or it might not.  The pointer we actually use to access texel
+     * data is in the Buffer object above (which depending on what the backend
      * did might point to the same memory as this pointer)
      */
-    ImU8 *DataBuffer = nullptr;  
+    ImU8 *DataBuffer = nullptr;
     size_t DataBufferSize = 0;
 
     // Configuration
@@ -123,8 +123,8 @@ struct Inspector
     ImVec4 CustomBackgroundColor = {0, 0, 0, 1};
 
     // Scaling limits
-    ImVec2 ScaleMin = {0.02f, 0.02f};
-    ImVec2 ScaleMax = {500, 500};
+    ImVec2 ScaleMin = {0.1f, 0.1f};
+    ImVec2 ScaleMax = {30, 30};
 
     // Grid
     float MinimumGridSize = 4; // Don't draw the grid if lines would be closer than MinimumGridSize pixels
@@ -145,6 +145,8 @@ struct Inspector
 
 Inspector *GetByKey(const Context *ctx, ImGuiID key);
 Inspector *GetOrAddByKey(Context *ctx, ImGuiID key);
+Inspector * GetCurInspector();
+
 
 void SetPanPos(Inspector *inspector, ImVec2 pos);
 void SetScale(Inspector *inspector, ImVec2 scale);
@@ -153,7 +155,7 @@ void RoundPanPos(Inspector *inspector);
 
 ImU8 *GetBuffer(Inspector *inspector, size_t bytes);
 
-/* GetTexelsToPixels 
+/* GetTexelsToPixels
  * Calculate a transform to convert from texel coordinates to screen pixel coordinates
  * */
 Transform2D GetTexelsToPixels(ImVec2 screenTopLeft, ImVec2 screenViewSize, ImVec2 uvTopLeft, ImVec2 uvViewSize, ImVec2 textureSize);

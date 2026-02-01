@@ -195,10 +195,12 @@ namespace ImGuiTexInspect {
         if (justCreated) {
             panelSize = {
                 size.x == 0 ? ImMax(ctx->DefaultInitialPanelWidth, contentRegionAvail.x) : size.x,
-                size.y == 0 ? ctx->DefaultPanelHeight : size.y
+                size.y == 0 ? ImMax(ctx->DefaultPanelHeight, contentRegionAvail.y): size.y
             };
         } else {
-            panelSize = {size.x == 0 ? contentRegionAvail.x : size.x, size.y == 0 ? ctx->DefaultPanelHeight : size.y};
+            panelSize = {
+                size.x == 0 ? contentRegionAvail.x : size.x,
+                size.y == 0 ? contentRegionAvail.y : size.y};
         }
 
         inspector->PanelSize = panelSize;

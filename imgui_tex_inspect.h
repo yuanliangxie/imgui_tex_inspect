@@ -7,6 +7,7 @@
 namespace ImGuiTexInspect
 {
 struct Context;
+struct Inspector;
 struct Transform2D;
 //-------------------------------------------------------------------------
 // [SECTION] INIT & SHUTDOWN
@@ -121,6 +122,13 @@ void CurrentInspector_SetCustomBackgroundColor(ImU32 color);
  * ReleaseInspectorData.
  */
 ImGuiID CurrentInspector_GetID();
+
+/* SetCurrentInspector
+ * Manually set the current inspector context. This allows using CurrentInspector_*
+ * APIs from outside BeginInspectorPanel/EndInspectorPanel scope.
+ * The Inspector pointer can be obtained via GetCurInspector() after EndInspectorPanel.
+ */
+void SetCurrentInspector(Inspector* inspector);
 
 /* Some convenience functions for drawing ImGui controls for the current Inspector */
 void DrawColorMatrixEditor();    // ColorMatrix editor.  See comments on ColorMatrix below.

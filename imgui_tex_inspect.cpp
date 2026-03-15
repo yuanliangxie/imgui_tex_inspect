@@ -347,7 +347,7 @@ namespace ImGuiTexInspect {
                 //DRAGGING
 
                 // start drag
-                if (!inspector->IsDragging && hovered && IO.MouseClicked[ctx->Input.PanButton]) {
+                if (!HasFlag(inspector->Flags, InspectorFlags_MouseDragInvalid) && !inspector->IsDragging && hovered && IO.MouseClicked[ctx->Input.PanButton]) {
                     inspector->IsDragging = true;
                 }
                 // carry on dragging
@@ -365,7 +365,7 @@ namespace ImGuiTexInspect {
             }
 
             // ZOOM
-            if (hovered && IO.MouseWheel != 0) {
+            if (!HasFlag(inspector->IsDragging, InspectorFlags_MouseWheelInvalid) && hovered && IO.MouseWheel != 0) {
                 float zoomRate = ctx->ZoomRate;
                 float scale = inspector->Scale.y;
                 float prevScale = scale;

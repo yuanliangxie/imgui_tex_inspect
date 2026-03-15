@@ -43,6 +43,8 @@ enum InspectorFlags_
     InspectorFlags_FlipX                = 1 << 7,  // Horizontally flip the way the texture is displayed
     InspectorFlags_FlipY                = 1 << 8,  // Vertically flip the way the texture is displayed
     InspectorFlags_FreeDragMode         = 1 << 9,  // Free drag in the available space
+    InspectorFlags_MouseDragInvalid     = 1 << 10, // Invalid use mouse to drag the inspector view
+    InspectorFlags_MouseWheelInvalid    = 1 << 11, // Invalid use mouse to adjust zoomrate
 };
 
 /* Use one of these Size structs if you want to specify an exact size for the inspector panel.

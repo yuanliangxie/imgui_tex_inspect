@@ -155,27 +155,29 @@ struct MarkRect {
 //-------------------------------------------------------------------------
 
 /* Add a marker rect (auto snap-to-grid). Returns the assigned unique ID. */
-int  CurrentInspector_AddMarkerRect(ImVec2 startTexel, ImVec2 endTexel,
+int  CurrentInspector_AddMarkerRect(ImVec2 startPixel, ImVec2 endPixel,
                                      ImU32 color = IM_COL32(255,165,0,255),
                                      float thickness = 1.5f, MarkRect::MarkType markType = MarkRect::Manual_Mark);
 
 /* Look up a marker rect by ID. Returns false if not found. */
-bool CurrentInspector_GetMarkerRectById(int id, MarkRect& outRect);
+bool CurrentInspector_GetPixelMarkerRectById(int id, MarkRect& outPixelRect);
+
+bool CurrentInspector_GetTexelMarkerRectById(int id, MarkRect& outTexelRect);
 
 /* Update a marker rect's region by ID (auto snap-to-grid). Returns false if not found. */
-bool CurrentInspector_UpdateMarkerRect(int id, ImVec2 newStartTexel, ImVec2 newEndTexel);
+bool CurrentInspector_UpdateMarkerRect(int id, ImVec2 newStartPixel, ImVec2 newEndPixel);
 
 /* Remove a marker rect by ID. Returns false if not found. */
 bool CurrentInspector_RemoveMarkerRect(int id);
 
 /* Hit-test: returns the ID of the top-most rect containing texelPos, or -1 if none. */
-int  CurrentInspector_HitTestMarkerRect(ImVec2 texelPos);
+int  CurrentInspector_HitTestMarkerRect(ImVec2 pixelPos);
 
 /* Clear all marker rects. */
 void CurrentInspector_ClearMarkerRects();
 
 /* Read-only access to all marker rects (for external drawing). */
-const ImVector<MarkRect>& CurrentInspector_GetAllMarkerRects();
+const ImVector<MarkRect>& CurrentInspector_GetAllTexelMarkerRects();
 
 /* Standalone snap-to-grid utility (no Inspector state needed). */
 ImRect SnapRectToTexelGrid(ImVec2 startTexel, ImVec2 endTexel, ImVec2 textureSize);

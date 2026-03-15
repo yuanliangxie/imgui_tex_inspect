@@ -561,9 +561,11 @@ namespace ImGuiTexInspect {
     // [SECTION] RECT MARKER API IMPLEMENTATIONS
     //-------------------------------------------------------------------------
 
-    int CurrentInspector_AddMarkerRect(ImVec2 startTexel, ImVec2 endTexel,
+    int CurrentInspector_AddMarkerRect(ImVec2 startPixel, ImVec2 endPixel,
                                         ImU32 color, float thickness, MarkRect::MarkType markType) {
         Inspector *inspector = GContext->CurrentInspector;
+        ImVec2 startTexel = inspector->PixelsToTexels * startPixel;
+        ImVec2 endTexel = inspector->PixelsToTexels * endPixel;
         ImRect snapped = SnapRectToTexelGrid(startTexel, endTexel, inspector->TextureSize);
         int id = inspector->NextMarkId_++;
         MarkRect mr;
@@ -576,21 +578,36 @@ namespace ImGuiTexInspect {
         return id;
     }
 
-    bool CurrentInspector_GetMarkerRectById(int id, MarkRect& outRect) {
+    bool CurrentInspector_GetPixelMarkerRectById(int id, MarkRect& outPixelRect) {
         Inspector *inspector = GContext->CurrentInspector;
         for (auto& mr : inspector->MarkerRects) {
             if (mr.id_ == id) {
-                outRect = mr;
+                outPixelRect = mr;
+                outPixelRect.rect_ = ImRect(inspector->TexelsToPixels * mr.rect_.GetTL(),
+                    inspector->TexelsToPixels * mr.rect_.GetBR());
                 return true;
             }
         }
         return false;
     }
 
-    bool CurrentInspector_UpdateMarkerRect(int id, ImVec2 newStartTexel, ImVec2 newEndTexel) {
+    bool CurrentInspector_GetTexelMarkerRectById(int id, MarkRect& outTexelRect) {
         Inspector *inspector = GContext->CurrentInspector;
         for (auto& mr : inspector->MarkerRects) {
             if (mr.id_ == id) {
+                outTexelRect = mr;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    bool CurrentInspector_UpdateMarkerRect(int id, ImVec2 newStartPixel, ImVec2 newEndPixel) {
+        Inspector *inspector = GContext->CurrentInspector;
+        for (auto& mr : inspector->MarkerRects) {
+            if (mr.id_ == id) {
+                ImVec2 newStartTexel = inspector->PixelsToTexels * newStartPixel;
+                ImVec2 newEndTexel = inspector->PixelsToTexels * newEndPixel;
                 mr.rect_ = SnapRectToTexelGrid(newStartTexel, newEndTexel, inspector->TextureSize);
                 return true;
             }
@@ -609,9 +626,10 @@ namespace ImGuiTexInspect {
         return false;
     }
 
-    int CurrentInspector_HitTestMarkerRect(ImVec2 texelPos) {
+    int CurrentInspector_HitTestMarkerRect(ImVec2 pixelPos) {
         Inspector *inspector = GContext->CurrentInspector;
         // Iterate from back to front: last-added (top-most) takes priority
+        ImVec2 texelPos = inspector->PixelsToTexels * pixelPos;
         for (int i = inspector->MarkerRects.Size - 1; i >= 0; --i) {
             if (inspector->MarkerRects[i].rect_.Contains(texelPos))
                 return inspector->MarkerRects[i].id_;
@@ -624,7 +642,7 @@ namespace ImGuiTexInspect {
         inspector->MarkerRects.clear();
     }
 
-    const ImVector<MarkRect>& CurrentInspector_GetAllMarkerRects() {
+    const ImVector<MarkRect>& CurrentInspector_GetAllTexelMarkerRects() {
         return GContext->CurrentInspector->MarkerRects;
     }
 

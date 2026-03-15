@@ -175,6 +175,9 @@ bool CurrentInspector_GetTexelMarkerRectById(int id, MarkRect& outTexelRect);
 /* Update a marker rect's region by ID (auto snap-to-grid). Returns false if not found. */
 bool CurrentInspector_UpdateMarkerRect(int id, ImVec2 newStartPixel, ImVec2 newEndPixel);
 
+/* Update a marker rect by texel coordinates directly (no pixel→texel conversion). */
+bool CurrentInspector_UpdateMarkerRectByTexel(int id, ImRect newTexelRect);
+
 /* Remove a marker rect by ID. Returns false if not found. */
 bool CurrentInspector_RemoveMarkerRect(int id);
 

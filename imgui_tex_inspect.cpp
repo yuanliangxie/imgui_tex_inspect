@@ -291,6 +291,9 @@ namespace ImGuiTexInspect {
             // See comment above
             ImGui::GetCurrentWindow()->ScrollMax.y = 1.0f;
 
+            // Save child window's DrawList for external annotation drawing
+            inspector->ChildDrawList = ImGui::GetWindowDrawList();
+
             // Callback for using our own image shader
             ImGui::GetWindowDrawList()->AddCallback(InspectorDrawCallback, inspector);
 

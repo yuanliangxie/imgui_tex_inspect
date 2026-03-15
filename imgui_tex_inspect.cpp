@@ -622,6 +622,17 @@ namespace ImGuiTexInspect {
         return false;
     }
 
+    bool CurrentInspector_UpdateMarkerRectByTexel(int id, ImRect newTexelRect) {
+        Inspector *inspector = GContext->CurrentInspector;
+        for (auto& mr : inspector->MarkerRects) {
+            if (mr.id_ == id) {
+                mr.rect_ = newTexelRect;
+                return true;
+            }
+        }
+        return false;
+    }
+
     bool CurrentInspector_RemoveMarkerRect(int id) {
         Inspector *inspector = GContext->CurrentInspector;
         for (int i = 0; i < inspector->MarkerRects.Size; ++i) {

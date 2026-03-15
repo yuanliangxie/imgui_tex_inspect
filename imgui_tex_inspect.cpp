@@ -479,6 +479,10 @@ namespace ImGuiTexInspect {
         return GContext->CurrentInspector->ID;
     }
 
+    void SetCurrentInspector(Inspector* inspector) {
+        GContext->CurrentInspector = inspector;
+    }
+
     void CurrentInspector_SetColorMatrix(const float (&matrix)[16], const float (&colorOffset)[4]) {
         Inspector *inspector = GContext->CurrentInspector;
         ShaderOptions *shaderOptions = &inspector->ActiveShaderOptions;

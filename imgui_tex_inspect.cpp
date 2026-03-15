@@ -109,7 +109,7 @@ namespace ImGuiTexInspect {
         SetFlag(GContext->NextPanelOptions.ToClear, clearFlags);
     }
 
-    static ImRect MakeMarkerRect(const Inspector *inspector, ImVec2 startTexel, ImVec2 endTexel)
+    ImRect SnapRectToTexelGrid(ImVec2 startTexel, ImVec2 endTexel, ImVec2 textureSize)
     {
         ImVec2 minTexel(ImMin(startTexel.x, endTexel.x), ImMin(startTexel.y, endTexel.y));
         ImVec2 maxTexel(ImMax(startTexel.x, endTexel.x), ImMax(startTexel.y, endTexel.y));
@@ -118,7 +118,7 @@ namespace ImGuiTexInspect {
         maxTexel = ImFloor(maxTexel) + ImVec2(1.0f, 1.0f);
 
         const ImVec2 minLimit(0.0f, 0.0f);
-        const ImVec2 maxLimit = inspector->TextureSize;
+        const ImVec2 maxLimit = textureSize;
 
         minTexel = ImClamp(minTexel, minLimit, maxLimit);
         maxTexel = ImClamp(maxTexel, minLimit, maxLimit);
@@ -169,9 +169,7 @@ namespace ImGuiTexInspect {
         previousTextureSize.y != textureSize.y)
         {
             inspector->MarkerRects.clear();
-            inspector->IsMarking = false;
-            inspector->MarkStartTexel = ImVec2(0, 0);
-            inspector->MarkEndTexel = ImVec2(0, 0);
+            inspector->NextMarkId_ = 0;
         }
 
         // Handle incoming flags. We keep special track of the
@@ -341,40 +339,9 @@ namespace ImGuiTexInspect {
 
             bool hovered = ImGui::IsWindowHovered();
 
-            //如果按鼠标中键，则取消所有标记框的绘制。
-            {
-                if (hovered && IO.MouseClicked[ctx->Input.ClearMarkButton]) {
-                    inspector->IsMarking = false;
-                    inspector->MarkStartTexel = {0,0};
-                    inspector->MarkEndTexel = {0,0};
-                    inspector->MarkerRects.clear();
-                }
-            }
+            // Rect marking input has been removed.
+            // Use CurrentInspector_AddMarkerRect / ClearMarkerRects etc. from external code.
 
-
-            {
-                if (hovered && IO.MouseClicked[ctx->Input.MarkButton])
-                {
-                    inspector->IsMarking = true;
-                    inspector->MarkStartTexel = clampedMousePosTexel;
-                    inspector->MarkEndTexel = clampedMousePosTexel;
-                }
-
-                if (inspector->IsMarking)
-                {
-                    if (IO.MouseDown[ctx->Input.MarkButton])
-                    {
-                        inspector->MarkEndTexel = clampedMousePosTexel;
-                    }
-                    else
-                    {
-                        inspector->MarkEndTexel = clampedMousePosTexel;
-                        ImRect rect = MakeMarkerRect(inspector, inspector->MarkStartTexel, inspector->MarkEndTexel);
-                        inspector->MarkerRects.push_back(MarkRect{rect, IM_COL32(255, 165, 0, 255), 1.5f, MarkRect::Manual_Mark});
-                        inspector->IsMarking = false;
-                    }
-                }
-            }
 
             {
                 //DRAGGING
@@ -439,16 +406,9 @@ namespace ImGuiTexInspect {
 
             ImDrawList *drawList = ImGui::GetWindowDrawList();
 
-            for (const MarkRect &mRect : inspector->MarkerRects)
-            {
-                DrawAnnotationRect(drawList, mRect.rect_.Min, mRect.rect_.Max, inspector->TexelsToPixels, mRect.color_, mRect.thickness_);
-            }
+            // Rect drawing has been removed.
+            // Use CurrentInspector_GetAllMarkerRects() + DrawAnnotationRect() from external code.
 
-            if (inspector->IsMarking)
-            {
-                ImRect previewRect = MakeMarkerRect(inspector, inspector->MarkStartTexel, inspector->MarkEndTexel);
-                DrawAnnotationRect(drawList, previewRect.Min, previewRect.Max, inspector->TexelsToPixels, IM_COL32(255, 215, 0, 255), 1.5f);
-            }
 
             return true;
         } else {
@@ -596,6 +556,78 @@ namespace ImGuiTexInspect {
     void CurrentInspector_SetCustomBackgroundColor(ImU32 color) {
         CurrentInspector_SetCustomBackgroundColor(ImGui::ColorConvertU32ToFloat4(color));
     }
+
+    //-------------------------------------------------------------------------
+    // [SECTION] RECT MARKER API IMPLEMENTATIONS
+    //-------------------------------------------------------------------------
+
+    int CurrentInspector_AddMarkerRect(ImVec2 startTexel, ImVec2 endTexel,
+                                        ImU32 color, float thickness, MarkRect::MarkType markType) {
+        Inspector *inspector = GContext->CurrentInspector;
+        ImRect snapped = SnapRectToTexelGrid(startTexel, endTexel, inspector->TextureSize);
+        int id = inspector->NextMarkId_++;
+        MarkRect mr;
+        mr.id_ = id;
+        mr.rect_ = snapped;
+        mr.color_ = color;
+        mr.thickness_ = thickness;
+        mr.mark_type_ = markType;
+        inspector->MarkerRects.push_back(mr);
+        return id;
+    }
+
+    bool CurrentInspector_GetMarkerRectById(int id, MarkRect& outRect) {
+        Inspector *inspector = GContext->CurrentInspector;
+        for (auto& mr : inspector->MarkerRects) {
+            if (mr.id_ == id) {
+                outRect = mr;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    bool CurrentInspector_UpdateMarkerRect(int id, ImVec2 newStartTexel, ImVec2 newEndTexel) {
+        Inspector *inspector = GContext->CurrentInspector;
+        for (auto& mr : inspector->MarkerRects) {
+            if (mr.id_ == id) {
+                mr.rect_ = SnapRectToTexelGrid(newStartTexel, newEndTexel, inspector->TextureSize);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    bool CurrentInspector_RemoveMarkerRect(int id) {
+        Inspector *inspector = GContext->CurrentInspector;
+        for (int i = 0; i < inspector->MarkerRects.Size; ++i) {
+            if (inspector->MarkerRects[i].id_ == id) {
+                inspector->MarkerRects.erase(&inspector->MarkerRects[i]);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    int CurrentInspector_HitTestMarkerRect(ImVec2 texelPos) {
+        Inspector *inspector = GContext->CurrentInspector;
+        // Iterate from back to front: last-added (top-most) takes priority
+        for (int i = inspector->MarkerRects.Size - 1; i >= 0; --i) {
+            if (inspector->MarkerRects[i].rect_.Contains(texelPos))
+                return inspector->MarkerRects[i].id_;
+        }
+        return -1;
+    }
+
+    void CurrentInspector_ClearMarkerRects() {
+        Inspector *inspector = GContext->CurrentInspector;
+        inspector->MarkerRects.clear();
+    }
+
+    const ImVector<MarkRect>& CurrentInspector_GetAllMarkerRects() {
+        return GContext->CurrentInspector->MarkerRects;
+    }
+
 
     void DrawColorMatrixEditor() {
         const char *colorVectorNames[] = {"R", "G", "B", "A", "1"};

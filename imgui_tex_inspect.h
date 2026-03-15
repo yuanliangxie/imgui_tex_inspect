@@ -2,6 +2,7 @@
 
 #pragma once
 #include "imgui.h"
+#include "imgui_internal.h"
 
 namespace ImGuiTexInspect
 {
@@ -135,6 +136,49 @@ void DrawAlphaModeSelector();    // A combo box for selecting the alpha mode
 void SetZoomRate(float factor);
 
 //-------------------------------------------------------------------------
+// [SECTION] RECT MARKER DATA
+//-------------------------------------------------------------------------
+struct MarkRect {
+    enum MarkType { Manual_Mark = 0 };
+
+    int       id_;          // Unique ID assigned by Inspector (auto-increment)
+    ImRect    rect_;        // Texel coordinates (snapped to grid)
+    ImU32     color_;
+    float     thickness_;
+    MarkType  mark_type_;
+};
+
+//-------------------------------------------------------------------------
+// [SECTION] RECT MARKER API (ID-based)
+//-------------------------------------------------------------------------
+
+/* Add a marker rect (auto snap-to-grid). Returns the assigned unique ID. */
+int  CurrentInspector_AddMarkerRect(ImVec2 startTexel, ImVec2 endTexel,
+                                     ImU32 color = IM_COL32(255,165,0,255),
+                                     float thickness = 1.5f, MarkRect::MarkType markType = MarkRect::Manual_Mark);
+
+/* Look up a marker rect by ID. Returns false if not found. */
+bool CurrentInspector_GetMarkerRectById(int id, MarkRect& outRect);
+
+/* Update a marker rect's region by ID (auto snap-to-grid). Returns false if not found. */
+bool CurrentInspector_UpdateMarkerRect(int id, ImVec2 newStartTexel, ImVec2 newEndTexel);
+
+/* Remove a marker rect by ID. Returns false if not found. */
+bool CurrentInspector_RemoveMarkerRect(int id);
+
+/* Hit-test: returns the ID of the top-most rect containing texelPos, or -1 if none. */
+int  CurrentInspector_HitTestMarkerRect(ImVec2 texelPos);
+
+/* Clear all marker rects. */
+void CurrentInspector_ClearMarkerRects();
+
+/* Read-only access to all marker rects (for external drawing). */
+const ImVector<MarkRect>& CurrentInspector_GetAllMarkerRects();
+
+/* Standalone snap-to-grid utility (no Inspector state needed). */
+ImRect SnapRectToTexelGrid(ImVec2 startTexel, ImVec2 endTexel, ImVec2 textureSize);
+
+//-------------------------------------------------------------------------
 // [SECTION] ANNOTATION TOOLS
 //-------------------------------------------------------------------------
 
@@ -165,6 +209,7 @@ void DrawAnnotationRect(ImDrawList *drawList, ImVec2 fromTexel, ImVec2 toTexel, 
  */
 template <typename T>
 void DrawAnnotations(T drawer, ImU64 maxAnnotatedTexels = 0);
+
 
 /* ValueText
  * An annoation class that draws text inside each texel when zoom level is high enough for it to fit.

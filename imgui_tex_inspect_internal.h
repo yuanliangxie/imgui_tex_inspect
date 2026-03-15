@@ -141,6 +141,9 @@ struct Inspector
     ImVector<MarkRect> MarkerRects;
     int NextMarkId_ = 0;  // Auto-increment counter for unique MarkRect IDs
 
+    // Child window DrawList pointer (set during BeginInspectorPanel, valid until Render())
+    ImDrawList* ChildDrawList = nullptr;
+
     ~Inspector();
 };
 
